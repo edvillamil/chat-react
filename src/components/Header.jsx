@@ -2,7 +2,7 @@ import { memo } from 'react'
 import ThemeToggle from './ThemeToggle.jsx'
 
 // Cabecera: logo, estado de conexión y switch de tema.
-function Header({ dark, onToggleTheme, connected, username, onDisconnect }) {
+function Header({ dark, onToggleTheme, connected, username, userCount = 0, onDisconnect }) {
   return (
     <header
       className="flex items-center justify-between gap-3 border-b border-slate-200
@@ -18,7 +18,9 @@ function Header({ dark, onToggleTheme, connected, username, onDisconnect }) {
         </span>
         <div className="leading-tight">
           <h1 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Chat</h1>
-          <p className="text-xs text-slate-400 dark:text-slate-500">Sala general</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            {connected ? `Sala general · ${userCount} en línea` : 'Sala general'}
+          </p>
         </div>
       </div>
 

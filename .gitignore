@@ -17,3 +17,7 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Claude Code (tooling local, no se versiona)
+.claude/launch.json
+.claude/settings.local.json

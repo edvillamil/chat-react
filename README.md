@@ -1,59 +1,99 @@
-# Chat React
+# Chat React + Spring Boot
 
-Interfaz de chat minimalista construida con **React + Tailwind CSS**. Es **solo frontend**: la conexión, el envío de mensajes y las sesiones están preparados como _stubs_ para integrarse más adelante con un backend en **Spring Boot**.
+Chat en tiempo real con **frontend React + Tailwind** (este repo) y **backend Spring Boot**
+(en `../2-chat-backend`), integrados por **WebSocket/STOMP** para mensajes y presencia, más
+una llamada REST para el historial.
 
 ## ✨ Características
 
 - 🎨 **Tema claro / oscuro** con switch animado (basado en clase, respeta la preferencia del sistema).
-- 🔌 **Pantalla de conexión**: el usuario escribe su nombre antes de entrar.
-- 💬 **Lista de mensajes** con avatar, nombre, hora y burbujas (datos de ejemplo).
-- ⌨️ **Input con envío por Enter** (semántica nativa de formulario) y botón de enviar.
-- 📱 **Responsive** y accesible (roles ARIA, foco visible, `prefers-reduced-motion`, `color-scheme`).
+- 🔌 **Conexión por nombre**: nombres **únicos** (el backend rechaza duplicados).
+- 💬 **Mensajes en tiempo real** vía STOMP, con avatar, nombre, hora y burbujas.
+- 👥 **Usuarios conectados** en vivo ("N en línea" en la cabecera).
+- 🗂️ **Historial** precargado al conectar (`GET /api/messages`).
+- ⌨️ **Envío por Enter** (semántica nativa de formulario) y botón de enviar.
+- 📱 **Responsive** y accesible (roles ARIA, foco visible, `prefers-reduced-motion`).
 
 ## 🛠️ Stack
 
-- [React 18](https://react.dev/)
-- [Vite 6](https://vite.dev/)
-- [Tailwind CSS v4](https://tailwindcss.com/) (vía `@tailwindcss/vite`, sin `tailwind.config.js`)
+**Frontend:** [React 18](https://react.dev/) · [Vite 6](https://vite.dev/) ·
+[Tailwind CSS v4](https://tailwindcss.com/) (sin `tailwind.config.js`) ·
+[@stomp/stompjs](https://stomp-js.github.io/).
+
+**Backend:** Spring Boot 4 · Java 21 · Maven · WebSocket/STOMP · Spring Data JPA · H2
+(en memoria). Ver `../2-chat-backend`.
 
 ## 🚀 Puesta en marcha
 
-```bash
-# Instalar dependencias
-npm install
+Necesitas **dos terminales**: una para el backend y otra para el frontend.
 
-# Servidor de desarrollo (http://localhost:5173)
-npm run dev
+### 1. Backend (Spring Boot) — `../2-chat-backend`
 
-# Build de producción (genera dist/)
-npm run build
+Arranca en `http://localhost:8080`. Requiere un JDK 21 (libera el 8080 si está ocupado).
 
-# Previsualizar el build
-npm run preview
+```powershell
+# Windows (PowerShell)
+cd ..\2-chat-backend
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot"
+.\mvnw.cmd -DskipTests spring-boot:run
 ```
 
-## 📁 Estructura
+```bash
+# macOS / Linux
+cd ../2-chat-backend
+./mvnw -DskipTests spring-boot:run
+```
+
+Consola H2 de desarrollo: `http://localhost:8080/h2-console`
+(JDBC URL `jdbc:h2:mem:chat`, usuario `sa`, sin contraseña).
+
+### 2. Frontend (React + Vite) — este repo
+
+Arranca en `http://localhost:5173`.
+
+```bash
+npm install          # solo la primera vez
+npm run dev          # servidor de desarrollo (http://localhost:5173)
+npm run build        # build de producción (genera dist/)
+npm run preview      # previsualiza el build
+```
+
+### Configuración de las URLs del backend
+
+Por defecto el frontend apunta a `http://localhost:8080` / `ws://localhost:8080/ws`
+(ver `src/config.js`). Para usar otro host/puerto, crea un `.env.local`:
+
+```ini
+VITE_API_BASE=http://localhost:8081
+VITE_WS_URL=ws://localhost:8081/ws
+```
+
+## 🔌 Contrato de integración (STOMP + REST)
+
+| Acción | Destino |
+|--------|---------|
+| Handshake WebSocket | `/ws` |
+| Registrar usuario (nombre único) | `SEND /app/join {username}` |
+| Resultado del registro (privado) | `SUB /user/queue/join-result` |
+| Enviar mensaje | `SEND /app/chat {username, text}` |
+| Recibir mensajes en tiempo real | `SUB /topic/sala` |
+| Lista de conectados en tiempo real | `SUB /topic/usuarios` |
+| Historial inicial | `GET /api/messages` |
+| Snapshot de conectados | `GET /api/users` |
+
+## 📁 Estructura (frontend)
 
 ```
 src/
 ├── App.jsx                 # Composición principal (consume hooks)
+├── config.js               # URLs del backend (API_BASE, WS_URL)
 ├── components/
-│   ├── Header.jsx          # Cabecera: logo, estado de conexión, switch de tema
+│   ├── Header.jsx          # Cabecera: estado, "N en línea", switch de tema
 │   ├── ThemeToggle.jsx     # Switch claro/oscuro
-│   ├── ConnectScreen.jsx   # Formulario para escribir el usuario
+│   ├── ConnectScreen.jsx   # Formulario de conexión (errores + "Conectando…")
 │   ├── MessageList.jsx     # Lista de mensajes (memoizada)
 │   └── MessageInput.jsx    # Input + botón de enviar
-├── hooks/
-│   ├── useTheme.js         # Estado del tema y sincronización con el DOM
-│   └── useChatSession.js   # Conexión, usuario y borrador del mensaje
-└── data/
-    └── messages.js         # Mensajes de ejemplo (mock)
+└── hooks/
+    ├── useTheme.js         # Estado del tema y sincronización con el DOM
+    └── useChatSession.js   # Cliente STOMP: conexión, mensajes, usuarios
 ```
-
-## 🔭 Estado del proyecto
-
-Toda la lógica de red está pendiente y marcada en el código con comentarios `// Pendiente:`. Los puntos de integración con **Spring Boot** son:
-
-- `useChatSession.connect` / `disconnect` → apertura y cierre de sesión.
-- `useChatSession.sendDraft` → envío de mensajes.
-- `data/messages.js` → se reemplazará por mensajes reales del backend.

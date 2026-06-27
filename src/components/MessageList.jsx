@@ -30,6 +30,21 @@ function Avatar({ name }) {
   )
 }
 
+// Aviso del sistema (presencia): píldora centrada, sin burbuja ni avatar.
+// p. ej. "María se ha conectado al chat".
+const SystemNotice = memo(function SystemNotice({ text }) {
+  return (
+    <li className="flex justify-center">
+      <span
+        className="rounded-full bg-slate-200/70 px-3 py-1 text-xs font-medium
+          text-slate-500 dark:bg-slate-800/70 dark:text-slate-400"
+      >
+        {text}
+      </span>
+    </li>
+  )
+})
+
 // Cada mensaje aislado y memoizado: solo se re-renderiza si cambian sus props.
 const MessageItem = memo(function MessageItem({ message, own }) {
   return (
@@ -65,9 +80,13 @@ function MessageList({ messages, currentUser }) {
       aria-label="Mensajes del chat"
     >
       <ul className="mx-auto flex max-w-2xl flex-col gap-4">
-        {messages.map((m) => (
-          <MessageItem key={m.id} message={m} own={currentUser === m.username} />
-        ))}
+        {messages.map((m) =>
+          m.type === 'system' ? (
+            <SystemNotice key={m.id} text={m.text} />
+          ) : (
+            <MessageItem key={m.id} message={m} own={currentUser === m.username} />
+          ),
+        )}
       </ul>
     </div>
   )

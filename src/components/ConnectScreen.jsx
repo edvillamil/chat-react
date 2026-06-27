@@ -1,14 +1,14 @@
 import { memo, useState } from 'react'
 
 // Pantalla previa: el usuario escribe su nombre antes de conectarse.
-// El "conectar" real (validación, sesión) se hará luego con Spring Boot.
-function ConnectScreen({ onConnect }) {
+// La conexión real (WebSocket/STOMP) la gestiona useChatSession.
+function ConnectScreen({ onConnect, connecting = false, error = null }) {
   const [name, setName] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
     const trimmed = name.trim()
-    if (!trimmed) return
+    if (!trimmed || connecting) return
     onConnect(trimmed)
   }
 
@@ -53,15 +53,22 @@ function ConnectScreen({ onConnect }) {
               focus:border-indigo-400 focus:bg-white focus:outline-none
               focus:ring-2 focus:ring-indigo-500/30 dark:border-slate-700
               dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? 'connect-error' : undefined}
           />
+          {error ? (
+            <p id="connect-error" role="alert" className="text-sm text-rose-500 dark:text-rose-400">
+              {error}
+            </p>
+          ) : null}
           <button
             type="submit"
-            disabled={!name.trim()}
+            disabled={!name.trim() || connecting}
             className="w-full rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-medium
               text-white shadow-sm transition-colors hover:bg-indigo-600
               disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Conectar
+            {connecting ? 'Conectando…' : 'Conectar'}
           </button>
         </form>
       </div>

@@ -1,26 +1,63 @@
-import { memo } from 'react'
+import { memo, useLayoutEffect, useRef } from 'react'
+import EmojiPicker from './EmojiPicker.jsx'
 
-// Barra para escribir y enviar. Sin lógica de backend todavía (solo visual).
-// El envío real (Enter / botón) se conectará luego con Spring Boot.
-function MessageInput({ value, onChange, onSend }) {
+// Barra para escribir y enviar. `onTyping` se dispara al teclear (texto no vacío)
+// para avisar al resto de que este usuario está escribiendo.
+function MessageInput({ value, onChange, onSend, onTyping }) {
+  const inputRef = useRef(null)
+  // Posición donde dejar el cursor tras insertar un emoji (null = no tocar).
+  const caretRef = useRef(null)
+
   // Enter envía de forma nativa al estar dentro de un <form>.
   function handleSubmit(e) {
     e.preventDefault()
     onSend()
   }
 
+  function handleChange(e) {
+    const next = e.target.value
+    onChange(next)
+    if (next.trim()) onTyping()
+  }
+
+  // Inserta el emoji en la posición del cursor (o al final) y recuerda dónde
+  // dejar el caret para reponerlo tras el re-render.
+  function insertEmoji(emoji) {
+    const el = inputRef.current
+    const start = el ? el.selectionStart : value.length
+    const end = el ? el.selectionEnd : value.length
+    const next = value.slice(0, start) + emoji + value.slice(end)
+    caretRef.current = start + emoji.length
+    onChange(next)
+    if (next.trim()) onTyping()
+  }
+
+  // Tras insertar un emoji, devuelve el foco al input y coloca el cursor justo
+  // después del emoji. No-op en los cambios normales de tecleo (caretRef null).
+  useLayoutEffect(() => {
+    if (caretRef.current == null) return
+    const el = inputRef.current
+    if (el) {
+      el.focus()
+      el.setSelectionRange(caretRef.current, caretRef.current)
+    }
+    caretRef.current = null
+  }, [value])
+
   return (
     <div className="border-t border-slate-200 bg-white/80 px-4 py-3 backdrop-blur sm:px-6
       dark:border-slate-800 dark:bg-slate-900/80">
       <form onSubmit={handleSubmit} className="mx-auto flex max-w-2xl items-end gap-2">
+        <EmojiPicker onSelect={insertEmoji} />
         <input
+          ref={inputRef}
           type="text"
           name="message"
           autoComplete="off"
           enterKeyHint="send"
           aria-label="Mensaje"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
           placeholder="Escribe un mensaje…"
           className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5
             text-sm text-slate-700 placeholder-slate-400 transition-colors
