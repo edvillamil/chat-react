@@ -20,8 +20,8 @@ una llamada REST para el historial.
 [Tailwind CSS v4](https://tailwindcss.com/) (sin `tailwind.config.js`) ·
 [@stomp/stompjs](https://stomp-js.github.io/).
 
-**Backend:** Spring Boot 4 · Java 21 · Maven · WebSocket/STOMP · Spring Data JPA · H2
-(en memoria). Ver `../2-chat-backend`.
+**Backend:** Spring Boot 4 · Java 21 · Maven · WebSocket/STOMP · Spring Data JPA ·
+PostgreSQL (Supabase). Ver `../2-chat-backend`.
 
 ## 🚀 Puesta en marcha
 
@@ -44,8 +44,9 @@ cd ../2-chat-backend
 ./mvnw -DskipTests spring-boot:run
 ```
 
-Consola H2 de desarrollo: `http://localhost:8080/h2-console`
-(JDBC URL `jdbc:h2:mem:chat`, usuario `sa`, sin contraseña).
+El backend persiste en **PostgreSQL (Supabase)**; la conexión se configura en el repo del
+backend (variables de entorno / `application-local.properties`, no versionado). Detalles en
+`../2-chat-backend`.
 
 ### 2. Frontend (React + Vite) — este repo
 

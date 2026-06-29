@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 There is no test runner, linter, or formatter configured. `npm run build` is the only verification gate — run it after changes to confirm the app still compiles.
 
-**This frontend needs the backend running to function.** The chat is non-operational without the Spring Boot server in `../2-chat-backend` listening on `:8080` (WebSocket handshake at `/ws`). Run it in a separate terminal (Spring Boot 4 · Java 21 · Maven · STOMP · Spring Data JPA · H2 in-memory):
+**This frontend needs the backend running to function.** The chat is non-operational without the Spring Boot server in `../2-chat-backend` listening on `:8080` (WebSocket handshake at `/ws`). Run it in a separate terminal (Spring Boot 4 · Java 21 · Maven · STOMP · Spring Data JPA · PostgreSQL on Supabase):
 
 ```powershell
 # Windows (PowerShell)
@@ -24,7 +24,7 @@ $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot"
 cd ../2-chat-backend && ./mvnw -DskipTests spring-boot:run
 ```
 
-H2 dev console: `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:chat`, user `sa`, no password). See `../2-chat-backend/CLAUDE.md` for the backend contract.
+The backend reads its DB connection from env vars / a gitignored `application-local.properties` (Supabase **session pooler**, since the direct connection is IPv6-only). See `../2-chat-backend/CLAUDE.md` for the backend contract and DB setup.
 
 ## Architecture
 
